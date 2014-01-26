@@ -1,0 +1,86 @@
+= さくらのVPSでIPv6設定
+
+: author
+   Kazuhiro NISHIYAMA
+: content-source
+   第 80 回 関西 Debian 勉強会
+: date
+   2014/01/26
+: allotted-time
+   5m
+: theme
+   debian
+
+= 経緯
+
+* 「さくらのVPS」の一部リージョンにて「IPv6」対応開始
+  (2013年10月31日掲載)
+
+  ((<URL:http://support.sakura.ad.jp/mainte/newsentry.php?id=11432>))
+
+* 対応リージョンのVPSの設定の手伝い
+
+= IPv6 設定情報 (1/2)
+
+: IPv6 アドレス
+    コントロールパネルに表示されたIPアドレス
+: ネットマスク
+    (('/64'))
+
+= IPv6 設定情報 (2/2)
+: ゲートウェイ(全リージョン/プラン共通)
+    (('fe80::1'))
+: ネームサーバー
+    : 東京リージョン
+        (('2001:e42::1'))
+    : 石狩リージョン
+        (('2401:2500::1')) ←
+
+= 具体的な設定方法
+
+* さくらの説明は以下のみ
+    IPv6アドレスの設定方法はOS毎に異なります。
+    詳しくはOS毎の設定マニュアル等をご参照ください。
+
+= man interfaces
+* (('interfaces(5)')) の (('INET6 ADDRESS FAMILY')) の (('The static Method')) を参照
+
+= IPv6 の基本設定
+* address はコントロールパネル
+* netmask, gateway はさっきのページ
+* dns-nameservers も同様
+= その他の設定
+* accept_ra, autoconf, privext
+  * デフォルトで 0 (off) のものも
+  * 明示的に全部 0 に
+* 固定アドレスのサーバーなので
+  * 自動設定オフ
+  * Privacy extensions (ランダムなアドレス) オフ
+
+
+= 最終的に追加した設定
+
+    iface eth0 inet6 static
+        address 2401:2500:(以下省略)
+        netmask 64
+        gateway fe80::1
+        accept_ra 0
+        autoconf 0
+        privext 0
+        dns-nameservers 2401:2500::1
+
+= まとめ
+
+* IPv6 は設定例が少ない
+* https://wiki.debian.org/DebianIPv6 にも Native IPv6 での interfaces への設定例がない
+* ML でも反応がない [debian-users:56921]
+
+= おまけ
+
+* IPv6 も含めた firewall 設定は ufw が楽
+    * Debian でもパッケージを入れれば使える
+    * IP アドレス指定なしの設定が IPv4, IPv6 共通になる
+* gmail への送信で問題がおきたら
+    * postfix の場合: (('smtp_address_preference = ipv4'))
+    * 逆引き必須という話
+      ((<URL:https://support.google.com/mail/?p=ipv6_authentication_error>))
